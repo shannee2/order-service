@@ -1,10 +1,8 @@
 package com.order.service;
 
 //import com.order.dto.catalog.RestaurantResponse;
-import com.order.dto.order.CreateOrderRequest;
-import com.order.dto.order.CreateOrderResponse;
-import com.order.dto.order.OrderChargeRequest;
-import com.order.dto.order.OrderItemRequest;
+import com.order.grpc.*;
+import com.order.model.enums.ChargeType;
 import com.order.model.enums.OrderStatus;
 import com.order.model.money.Money;
 import com.order.model.order.Order;
@@ -19,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -48,6 +48,69 @@ public class OrderService {
         this.restaurantService = restaurantService;
     }
 
+    @Transactional
+    public Long createOrder(CreateOrderRequest request) {
+        restaurantService.validateRestaurantAndItemsDetails(request);
+
+        Order order = new Order();
+        order.setOrderStatus(OrderStatus.ORDER_CREATED);
+        order.setGrandTotal(new Money(request.getGrandTotal(), request.getCurrency()));
+        order.setCreatedBy(request.getUserId());
+        order.setRestaurantId(request.getRestaurantId());
+
+        order = orderRepository.save(order);
+
+        Set<OrderItem> orderItems = new HashSet<>(createOrderItems(request.getItemsList(), order));
+        Set<OrderCharge> orderCharges = new HashSet<>(createOrderCharges(request.getChargesList(), order));
+        OrderHistory orderHistory = createOrderHistory(OrderStatus.ORDER_CREATED, order);
+
+        order.addHistory(orderHistory);
+        order.setOrderItems(orderItems);
+        order.setOrderCharges(orderCharges);
+
+        orderItemRepository.saveAll(orderItems);
+        orderChargeRepository.saveAll(orderCharges);
+        orderHistoryRepository.save(orderHistory);
+
+
+        return order.getOrderId();
+    }
+
+    public GetOrderResponse getOrderDetails(Long orderId) {
+        Order order = orderRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        return GetOrderResponse.newBuilder()
+                .setOrderId(order.getOrderId())
+                .setOrderStatus(order.getOrderStatus().name())
+                .setGrandTotal(order.getGrandTotal().getAmount())
+                .setCurrency(order.getGrandTotal().getCurrency())
+                .setCreatedBy(order.getCreatedBy())
+                .setRestaurantId(order.getRestaurantId())
+                .addAllItems(mapOrderItems(order.getOrderItems()))
+                .addAllCharges(mapOrderCharges(order.getOrderCharges()))
+                .build();
+    }
+
+    private List<OrderItemResponse> mapOrderItems(Set<OrderItem> orderItems) {
+        return orderItems.stream()
+                .map(item -> OrderItemResponse.newBuilder()
+                        .setItemId(item.getOrderItemExternalId())
+                        .setQuantity(item.getQuantity())
+                        .setUnitPrice(item.getUnitPrice())
+                        .build())
+                .toList();
+    }
+
+    private List<OrderChargeResponse> mapOrderCharges(Set<OrderCharge> orderCharges) {
+        return orderCharges.stream()
+                .map(charge -> OrderChargeResponse.newBuilder()
+                        .setChargeType(charge.getChargeType().name())
+                        .setChargeCost(charge.getChargeCost())
+                        .build())
+                .toList();
+    }
+
     public List<OrderItem> createOrderItems(List<OrderItemRequest> orderItemRequests, Order order){
         return orderItemRequests.stream().map(orderItemRequest -> {
             OrderItem orderItem = new OrderItem();
@@ -63,7 +126,7 @@ public class OrderService {
         return orderChargeRequests.stream().map(orderChargeRequest -> {
             OrderCharge orderCharge = new OrderCharge();
             orderCharge.setOrder(order);
-            orderCharge.setChargeType(orderChargeRequest.getChargeType());
+            orderCharge.setChargeType(ChargeType.valueOf(orderChargeRequest.getChargeType()));
             orderCharge.setChargeCost(new Money(orderChargeRequest.getChargeCost()));
             return orderCharge;
         }).collect(Collectors.toList());
@@ -77,32 +140,4 @@ public class OrderService {
         return orderHistory;
     }
 
-    @Transactional
-    public CreateOrderResponse createOrder(CreateOrderRequest request) {
-        CreateOrderResponse createOrderResponse = restaurantService.validateRestaurantAndItemsDetails(request);
-
-        Order order = new Order();
-        order.setOrderStatus(OrderStatus.ORDER_CREATED);
-        order.setGrandTotal(new Money(request.getGrandTotal(), request.getCurrency()));
-        order.setCreatedBy(request.getUserId());
-        order.setRestaurantId(request.getRestaurantId());
-
-        order = orderRepository.save(order);
-
-        List<OrderItem> orderItems = createOrderItems(request.getItems(), order);
-        List<OrderCharge> orderCharges = createOrderCharges(request.getCharges(), order);
-        OrderHistory orderHistory = createOrderHistory(OrderStatus.ORDER_CREATED, order);
-
-        order.addHistory(orderHistory);
-        order.setOrderItems(orderItems);
-        order.setOrderCharges(orderCharges);
-
-        orderItemRepository.saveAll(orderItems);
-        orderChargeRepository.saveAll(orderCharges);
-        orderHistoryRepository.save(orderHistory);
-
-        createOrderResponse.setOrderId(order.getOrderId());
-
-        return createOrderResponse;
-    }
 }

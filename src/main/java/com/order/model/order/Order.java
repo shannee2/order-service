@@ -3,9 +3,11 @@ package com.order.model.order;
 import com.order.model.enums.OrderStatus;
 import com.order.model.money.Money;
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Set;
 
 @Entity
 @Table(name = "order_header")
@@ -25,13 +27,16 @@ public class Order {
     private Long restaurantId;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderItem> orderItems = new ArrayList<>();
+    @BatchSize(size = 10)
+    private Set<OrderItem> orderItems = new HashSet<>();
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderHistory> orderHistories = new ArrayList<>();
+    @BatchSize(size = 10)
+    private Set<OrderHistory> orderHistories = new HashSet<>();
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderCharge> orderCharges = new ArrayList<>();
+    @BatchSize(size = 10)
+    private Set<OrderCharge> orderCharges = new HashSet<>();
 
     public void addHistory(OrderHistory orderHistory) {
         orderHistories.add(orderHistory);
@@ -57,15 +62,15 @@ public class Order {
         return restaurantId;
     }
 
-    public List<OrderItem> getOrderItems() {
+    public Set<OrderItem> getOrderItems() {
         return orderItems;
     }
 
-    public List<OrderHistory> getOrderHistories() {
+    public Set<OrderHistory> getOrderHistories() {
         return orderHistories;
     }
 
-    public List<OrderCharge> getOrderCharges() {
+    public Set<OrderCharge> getOrderCharges() {
         return orderCharges;
     }
 
@@ -89,15 +94,15 @@ public class Order {
         this.restaurantId = restaurantId;
     }
 
-    public void setOrderItems(List<OrderItem> orderItems) {
+    public void setOrderItems(Set<OrderItem> orderItems) {
         this.orderItems = orderItems;
     }
 
-    public void setOrderHistories(List<OrderHistory> orderHistories) {
+    public void setOrderHistories(Set<OrderHistory> orderHistories) {
         this.orderHistories = orderHistories;
     }
 
-    public void setOrderCharges(List<OrderCharge> orderCharges) {
+    public void setOrderCharges(Set<OrderCharge> orderCharges) {
         this.orderCharges = orderCharges;
     }
 }

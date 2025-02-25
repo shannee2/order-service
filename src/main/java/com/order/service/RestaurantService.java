@@ -1,10 +1,12 @@
 package com.order.service;
 
-import com.order.dto.order.CreateOrderRequest;
-import com.order.dto.order.CreateOrderResponse;
-import com.order.dto.order.OrderItemRequest;
+
 import com.order.dto.restaurant.RestaurantResponse;
 //import com.order.grpc.CreateOrderRequest;
+import com.order.exceptions.order.InvalidItemIdException;
+import com.order.grpc.CreateOrderRequest;
+import com.order.grpc.CreateOrderResponse;
+import com.order.grpc.OrderItemRequest;
 import org.springframework.http.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class RestaurantService {
@@ -27,7 +30,7 @@ public class RestaurantService {
 
     private static final String CATALOG_SERVICE_URL = "http://localhost:8080/restaurants/";
 
-    public CreateOrderResponse validateRestaurantAndItemsDetails(CreateOrderRequest request) {
+    public void validateRestaurantAndItemsDetails(CreateOrderRequest request) {
         String token = authService.getToken();
 
         HttpHeaders headers = new HttpHeaders();
@@ -41,27 +44,21 @@ public class RestaurantService {
                 RestaurantResponse.class
         );
 
-        RestaurantResponse restaurantResponse = responseEntity.getBody();
-        assert restaurantResponse != null;
-        return new CreateOrderResponse(
-                new CreateOrderResponse.RestaurantInfo(restaurantResponse.getId(), restaurantResponse.getName()),
-                populateOrderItems(restaurantResponse.getMenuItems(), request.getItems())
-        );
-    }
 
-    public List<CreateOrderResponse.OrderItemInfo> populateOrderItems(List<RestaurantResponse.MenuItemResponse> menuItems, List<OrderItemRequest> items) {
-        List<CreateOrderResponse.OrderItemInfo> orderItemInfos = new ArrayList<>();
-        for(OrderItemRequest item : items) {
-            for(RestaurantResponse.MenuItemResponse menuItem : menuItems) {
+        for(OrderItemRequest item : request.getItemsList()) {
+            boolean found = false;
+            for(RestaurantResponse.MenuItemResponse menuItem : Objects.requireNonNull(responseEntity.getBody()).getMenuItems()) {
                 if(menuItem.getId().equals(item.getItemId())) {
-                    orderItemInfos.add(new CreateOrderResponse.OrderItemInfo(menuItem.getId(), menuItem.getName()));
+                    found = true;
                     break;
                 }
             }
+            if(!found) {
+                throw new InvalidItemIdException("Invalid item ID: "+item.getItemId());
+            }
         }
-        if(orderItemInfos.size() != items.size()) {
-            throw new IllegalArgumentException("Invalid item ID");
-        }
-        return orderItemInfos;
+
+        RestaurantResponse restaurantResponse = responseEntity.getBody();
+        assert restaurantResponse != null;
     }
 }
