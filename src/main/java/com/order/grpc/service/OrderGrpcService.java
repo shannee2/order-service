@@ -46,7 +46,6 @@ public class OrderGrpcService extends OrderServiceGrpc.OrderServiceImplBase {
     @Override
     @Transactional
     public void createOrder(CreateOrderRequest request, StreamObserver<CreateOrderResponse> responseObserver) {
-
         Long orderId = orderService.createOrder(request);
 
         CreateOrderResponse response = CreateOrderResponse.newBuilder()

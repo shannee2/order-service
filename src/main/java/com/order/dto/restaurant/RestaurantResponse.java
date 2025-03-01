@@ -5,16 +5,12 @@ import java.util.List;
 public class RestaurantResponse {
     private Long id;
     private String name;
+    private String city;
+    private String address;
+    private String phoneNumber;
+    private Double latitude;
+    private Double longitude;
     private List<MenuItemResponse> menuItems;
-
-    @Override
-    public String toString() {
-        return "RestaurantResponse{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", menuItems=" + menuItems +
-                '}';
-    }
 
     public Long getId() {
         return id;
@@ -38,6 +34,60 @@ public class RestaurantResponse {
 
     public void setMenuItems(List<MenuItemResponse> menuItems) {
         this.menuItems = menuItems;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    @Override
+    public String toString() {
+        return "RestaurantResponse{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", city='" + city + '\'' +
+                ", address='" + address + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", menuItems=" + menuItems +
+                '}';
     }
 
 

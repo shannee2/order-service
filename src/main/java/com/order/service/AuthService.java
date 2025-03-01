@@ -22,17 +22,17 @@ public class AuthService {
 
     public String getToken() {
         if (cachedToken == null) {
-            cachedToken = authenticate();
+            authenticate();
         }
         return cachedToken;
     }
 
-    private String authenticate() {
-        LoginRequest loginRequest = new LoginRequest("admin", "admin"); // Replace with actual credentials
+    private void authenticate() {
+        LoginRequest loginRequest = new LoginRequest("admin", "admin");
 
         try {
             LoginResponse response = restTemplate.postForObject(AUTH_URL, loginRequest, LoginResponse.class);
-            return Objects.requireNonNull(response).getToken();
+            this.cachedToken = Objects.requireNonNull(response).getToken();
         } catch (HttpClientErrorException e) {
             throw new RuntimeException("Authentication failed: " + e.getMessage());
         }

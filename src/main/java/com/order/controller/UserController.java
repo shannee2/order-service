@@ -40,9 +40,4 @@ public class UserController {
     public User getUser(@PathVariable String username) throws UserNotFoundException {
         return userService.getUserByUsername(username);
     }
-
-//    @GetMapping
-//    public List<User> getAllUsers() {
-//        return userService.getAllUsers();
-//    }
 }

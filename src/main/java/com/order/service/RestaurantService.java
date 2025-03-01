@@ -30,7 +30,7 @@ public class RestaurantService {
 
     private static final String CATALOG_SERVICE_URL = "http://localhost:8080/restaurants/";
 
-    public void validateRestaurantAndItemsDetails(CreateOrderRequest request) {
+    public RestaurantResponse validateRestaurantAndItemsDetails(CreateOrderRequest request) {
         String token = authService.getToken();
 
         HttpHeaders headers = new HttpHeaders();
@@ -43,6 +43,8 @@ public class RestaurantService {
                 entity,
                 RestaurantResponse.class
         );
+
+        System.out.println(responseEntity.getBody());
 
 
         for(OrderItemRequest item : request.getItemsList()) {
@@ -60,5 +62,6 @@ public class RestaurantService {
 
         RestaurantResponse restaurantResponse = responseEntity.getBody();
         assert restaurantResponse != null;
+        return restaurantResponse;
     }
 }
