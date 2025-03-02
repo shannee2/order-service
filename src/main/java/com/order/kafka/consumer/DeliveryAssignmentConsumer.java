@@ -1,4 +1,4 @@
-package com.order.kafka;
+package com.order.kafka.consumer;
 
 import com.order.dto.order.DeliveryAssignmentDto;
 import com.order.model.enums.OrderStatus;

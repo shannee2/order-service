@@ -4,7 +4,7 @@ package com.order.service;
 import com.order.dto.order.OrderDto;
 import com.order.dto.restaurant.RestaurantResponse;
 import com.order.grpc.*;
-import com.order.kafka.OrderProducer;
+import com.order.kafka.producer.OrderProducer;
 import com.order.model.enums.OrderStatus;
 import com.order.model.money.Money;
 import com.order.model.order.Order;
@@ -76,15 +76,6 @@ public class OrderService {
         order.setOrderItems(orderItems);
         order.setOrderCharges(orderCharges);
 
-        orderItemRepository.saveAll(orderItems);
-        orderChargeRepository.saveAll(orderCharges);
-        orderHistoryRepository.save(orderHistory);
-
-
-//        for(OrderItem item : order.getOrderItems()){
-//            System.out.println("ORDER ITEM ID: "+item.getOrderItemExternalId());
-//        }
-
         orderProducer.sendOrder(new OrderDto(order, restaurantResponse));
 
         return order.getOrderId();
@@ -111,11 +102,8 @@ public class OrderService {
         Order order = orderRepository.findWithHistoriesByOrderId(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
+        order.setOrderStatus(orderStatus);
         OrderHistory orderHistory = orderHistoryService.createOrderHistory(order, orderStatus);
         order.addHistory(orderHistory);
-        order.setOrderStatus(orderStatus);
-//        orderRepository.save(order);
-        orderHistory.setOrder(order);
-        orderHistoryRepository.save(orderHistory);
     }
 }
