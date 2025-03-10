@@ -26,13 +26,8 @@ public class DeliveryAssignmentConsumer {
         try {
             String message = record.value();
             System.out.println("Received message: " + message);
-
-            // Deserialize JSON
             DeliveryAssignmentDto assignment = objectMapper.readValue(message, DeliveryAssignmentDto.class);
-
-            // Process the delivery assignment
             orderService.updateOrderStatus(assignment.getOrderId(), OrderStatus.DELIVERY_PARTNER_ASSIGNED);
-
         } catch (Exception e) {
             System.err.println("Error processing message: " + e.getMessage());
         }

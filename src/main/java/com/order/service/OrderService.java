@@ -38,7 +38,7 @@ public class OrderService {
     private final OrderHistoryService orderHistoryService;
     private final OrderProducer orderProducer;
 
-    private static final String CATALOG_SERVICE_URL = "http://localhost:8080/restaurants/";
+//    private static final String CATALOG_SERVICE_URL = "http://localhost:8080/restaurants/";
 
     public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
                         OrderChargeRepository orderChargeRepository, OrderHistoryRepository orderHistoryRepository,

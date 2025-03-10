@@ -12,7 +12,7 @@ import java.util.Objects;
 @Service
 public class AuthService {
     private final RestTemplate restTemplate;
-    private static final String AUTH_URL = "http://localhost:8080/users/login";
+    private static final String AUTH_URL = "http://localhost:8083/users/login";
     private String cachedToken;
 
     @Autowired

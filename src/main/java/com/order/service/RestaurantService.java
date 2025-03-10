@@ -28,28 +28,15 @@ public class RestaurantService {
         this.restTemplate = restTemplate;
     }
 
-    private static final String CATALOG_SERVICE_URL = "http://localhost:8080/restaurants/";
+    private static final String CATALOG_SERVICE_URL = "http://localhost:8083/restaurants/";
 
     public RestaurantResponse validateRestaurantAndItemsDetails(CreateOrderRequest request) {
-        String token = authService.getToken();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<RestaurantResponse> responseEntity = restTemplate.exchange(
-                CATALOG_SERVICE_URL + request.getRestaurantId(),
-                HttpMethod.GET,
-                entity,
-                RestaurantResponse.class
-        );
-
-        System.out.println(responseEntity.getBody());
-
+        RestaurantResponse restaurantResponse = fetchRestaurantAndItemDetails(request.getRestaurantId());
 
         for(OrderItemRequest item : request.getItemsList()) {
             boolean found = false;
-            for(RestaurantResponse.MenuItemResponse menuItem : Objects.requireNonNull(responseEntity.getBody()).getMenuItems()) {
+            for(RestaurantResponse.MenuItemResponse menuItem : Objects.requireNonNull(restaurantResponse.getMenuItems())) {
                 if(menuItem.getId().equals(item.getItemId())) {
                     found = true;
                     break;
@@ -59,9 +46,23 @@ public class RestaurantService {
                 throw new InvalidItemIdException("Invalid item ID: "+item.getItemId());
             }
         }
-
-        RestaurantResponse restaurantResponse = responseEntity.getBody();
-        assert restaurantResponse != null;
         return restaurantResponse;
+    }
+
+    private RestaurantResponse fetchRestaurantAndItemDetails(Long restaurantId){
+        String token = authService.getToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<RestaurantResponse> responseEntity = restTemplate.exchange(
+                CATALOG_SERVICE_URL + restaurantId,
+                HttpMethod.GET,
+                entity,
+                RestaurantResponse.class
+        );
+        assert responseEntity.getBody() != null;
+        return responseEntity.getBody();
     }
 }
